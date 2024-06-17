@@ -5,3 +5,36 @@ on:
   push:
     branches:
       - release
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout source code.
+        uses: actions/checkout@master
+
+      # - name: Cache packages.php
+
+      - name: Deploy
+        uses: SamKirkland/FTP-Deploy-Action@4.3.5
+        with:
+          server: ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          port: ${{ scretes.SFTP_PORT }}
+          local-dir: /
+          git-ftp-args: --insecure
+
+      - name: Discord Alert Success
+        uses: sarisia/actions-status-discord@v1
+        if: success()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          description: "🎉 사이트가 배포되었습니다!"
+
+      - name: Discord Alert Failure
+        uses: sarisia/actions-status-discord@v1
+        if: failure()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          description: "🔥 사이트 배포를 실패하였습니다."
